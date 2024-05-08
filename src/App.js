@@ -1,43 +1,49 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./App.css";
-import BarChart from "./components/BarChart";
 import LineChart from "./components/LineChart";
-import PieChart from "./components/PieChart";
-import { UserData } from "./Data";
 
 function App() {
-  const [userData, setUserData] = useState({
-    labels: UserData.map((data) => data.year),
-    datasets: [
-      {
-        label: "Users Gained",
-        data: UserData.map((data) => data.userGain),
-        backgroundColor: [
-          "rgba(75,192,192,1)",
-          "#ecf0f1",
-          "#50AF95",
-          "#f3ba2f",
-          "#2a71d0",
-        ],
-        borderColor: "black",
-        borderWidth: 2,
-      },
-    ],
-  });
+  const [chartData, setChartData] = useState(null);
 
-  // IF YOU SEE THIS COMMENT: I HAVE GOOD EYESIGHT
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(
+          "https://disease.sh/v3/covid-19/historical/all?lastdays=all"
+        );
+        const data = await response.json();
+        // Extracting dates and cases data from the API response
+        const dates = Object.keys(data.cases);
+        const cases = Object.values(data.cases);
+        // Creating the chart data object
+        const chartData = {
+          labels: dates,
+          datasets: [
+            {
+              label: "Covid Cases",
+              data: cases,
+              backgroundColor: "rgba(12,192,192,1)",
+              borderColor: "black",
+              borderWidth: .75,
+            },
+          ],
+        };
+        setChartData(chartData);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   return (
     <div className="App">
-      <div style={{ width: 700 }}>
-        <BarChart chartData={userData} />
+      <div>{<h3>Graph showing the cases fluctuations</h3>}</div>
+      <div style={{ width: 1400 }}>
+        {chartData && <LineChart chartData={chartData} />}
       </div>
-      <div style={{ width: 700 }}>
-        <LineChart chartData={userData} />
-      </div>
-      <div style={{ width: 700 }}>
-        <PieChart chartData={userData} />
-      </div>
+      <div>{<a href="https://www.w3schools.com"><b>For Map Click Here</b></a>}</div>
     </div>
   );
 }
